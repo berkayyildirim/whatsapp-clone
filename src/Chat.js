@@ -7,13 +7,16 @@ import MicIcon from "@material-ui/icons/Mic"
 // import axios from "./axios"
 import { useParams } from "react-router"
 import db from "./firebase"
+import firebase from "firebase";
+import { useStateValue } from "./StateProvider";
 
 function Chat() {
-    const [input, setInput] = useState("");
-    const [seed, setSeed] = useState("");
+    const [ input, setInput ] = useState("");
+    const [ seed, setSeed ] = useState("");
     const { roomId } = useParams();
-    const [ roomName, setRoomName] = useState("");
-    const [messages, setMessages] = useState([]);
+    const [ roomName, setRoomName ] = useState("");
+    const [ messages, setMessages ] = useState([]);
+    const [ {user}, dispatch ] = useStateValue();
 
     useEffect(() => {
         if (roomId) {
@@ -46,6 +49,14 @@ function Chat() {
         //     timestamp: "Just now",
         //     received: false,
         // });
+        db.collection("rooms")
+            .doc(roomId)
+            .collection("messages")
+            .add({
+                message: input,
+                name: user.displayName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        })
         setInput("");
     };
 
@@ -74,7 +85,7 @@ function Chat() {
 
             <div className="chat__body">
                 {messages.map(message => (
-                    <p className={`chat__message ${true && "chat__receiver"}`}>
+                    <p className={`chat__message ${message.name === user.displayName && "chat__receiver"}`}>
                         <span className="chat__name">
                             {message.name}
                         </span>
